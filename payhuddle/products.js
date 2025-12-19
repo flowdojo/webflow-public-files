@@ -1454,7 +1454,7 @@ const CheckoutPage = {
     if (back) {
       back.addEventListener("click", (e) => {
         e.preventDefault();
-        window.location.href = "/product";
+        window.location.href = "/merchant-test-cards";
       });
     }
   },
@@ -1478,7 +1478,7 @@ const CheckoutPage = {
         <div style="padding:3rem;text-align:center;color:#666;">
           <div style="font-size:3rem;">🛒</div>
           <h3>Your cart is empty</h3>
-          <a href="/product" class="button w-button" style="margin-top:1rem;">Browse Products</a>
+          <a href="/merchant-test-cards" class="button w-button" style="margin-top:1rem;">Browse Products</a>
         </div>
       `;
       }
