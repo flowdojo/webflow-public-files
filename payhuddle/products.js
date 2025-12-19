@@ -1614,29 +1614,57 @@ const CheckoutPage = {
     }
   },
 
-  observeFormSuccess() {
-    const successEl = document.querySelector(".w-form-done");
-    if (!successEl) return;
+observeFormSuccess() {
+  const successEl = document.querySelector(".w-form-done");
+  const form = document.querySelector(".checkout-section form");
+  
+  if (!successEl && !form) return;
 
-    const clearCartNow = () => {
-      CartManager.clear();
-      window.dispatchEvent(new CustomEvent("cart-updated"));
-    };
+  const clearCartNow = () => {
+    console.log("Clearing cart after successful submission");
+    CartManager.clear();
+    window.dispatchEvent(new CustomEvent("cart-updated"));
+  };
 
-    const checkDisplay = () => {
+  // Method 1: Watch success element
+  if (successEl) {
+    const observer = new MutationObserver(() => {
       const display = window.getComputedStyle(successEl).display;
-      if (display !== "none") clearCartNow();
-    };
-
-    checkDisplay();
-
-    const observer = new MutationObserver(checkDisplay);
+      if (display === "block" || display === "flex") {
+        console.log("Success message visible - clearing cart");
+        clearCartNow();
+        observer.disconnect(); // Stop observing after clearing
+      }
+    });
 
     observer.observe(successEl, {
       attributes: true,
-      attributeFilter: ["style", "class"],
+      attributeFilter: ["style"],
     });
-  },
+  }
+
+  // Method 2: Intercept form submission
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      console.log("Form submitted, waiting for success...");
+      
+      // Check multiple times to catch the success state
+      const checkInterval = setInterval(() => {
+        if (successEl) {
+          const display = window.getComputedStyle(successEl).display;
+          if (display === "block" || display === "flex") {
+            console.log("Success detected via interval");
+            clearCartNow();
+            clearInterval(checkInterval);
+          }
+        }
+      }, 100);
+
+      // Stop checking after 5 seconds
+      setTimeout(() => clearInterval(checkInterval), 5000);
+    });
+  }
+},
 
   updateSummary() {
     const cart = this.getCart();
