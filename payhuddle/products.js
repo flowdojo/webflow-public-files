@@ -1450,7 +1450,7 @@ const CheckoutPage = {
   },
 
   bindEvents() {
-    const back = document.querySelector(".btn-secondary");
+    const back = document.querySelector(".btn-secondar5y");
     if (back) {
       back.addEventListener("click", (e) => {
         e.preventDefault();
