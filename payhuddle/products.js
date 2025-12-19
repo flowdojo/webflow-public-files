@@ -1504,15 +1504,14 @@ const CheckoutPage = {
       if (sets) sets.textContent = item.setsNum || "";
 
       const type = el.querySelector('[fd-checkout-field="interface-type"]');
-      type.textContent = item.interfaceType || "";
+      if (type) type.textContent = item.interfaceType || "";
 
       const brand = el.querySelector('[fd-checkout-field="brand"]');
       if (brand) brand.textContent = item.brand || "";
 
-      const qtyEl = el.querySelector('[fd-checkout-field="qty"]');
-      if (qtyEl) {
-        const q = item.quantity;
-        qtyEl.textContent = q < 10 ? `0${q}` : String(q);
+      const qtyInput = el.querySelector('[fd-checkout-field="item-qty-field"]');
+      if (qtyInput) {
+        qtyInput.value = item.quantity;
       }
 
       const price = el.querySelector('[fd-checkout-field="product-price"]');
@@ -1521,10 +1520,98 @@ const CheckoutPage = {
         price.textContent = `$${total}`;
       }
 
+      // Bind quantity controls
+      this.bindQuantityControls(el, item, qtyInput, price);
+
+      // Bind remove button
+      this.bindRemoveButton(el, item);
+
       this.listWrap.appendChild(el);
     });
 
     if (this.summaryWrap) this.summaryWrap.style.display = "block";
+  },
+
+  bindQuantityControls(el, item, qtyInput, priceEl) {
+    const minus = el.querySelector(".minus");
+    const plus = el.querySelector(".plus");
+
+    if (minus) {
+      minus.addEventListener("click", () => {
+        const currentQty = parseInt(qtyInput.value, 10) || 1;
+        const newQty = Math.max(1, currentQty - 1);
+        
+        CartManager.updateQuantity(item.name, newQty);
+        qtyInput.value = newQty;
+        
+        // Update price display
+        if (priceEl) {
+          const total = (item.priceNumeric * newQty).toFixed(2);
+          priceEl.textContent = `$${total}`;
+        }
+        
+        this.updateSummary();
+        window.dispatchEvent(new CustomEvent("cart-updated"));
+      });
+    }
+
+    if (plus) {
+      plus.addEventListener("click", () => {
+        const currentQty = parseInt(qtyInput.value, 10) || 1;
+        const newQty = currentQty + 1;
+        
+        CartManager.updateQuantity(item.name, newQty);
+        qtyInput.value = newQty;
+        
+        // Update price display
+        if (priceEl) {
+          const total = (item.priceNumeric * newQty).toFixed(2);
+          priceEl.textContent = `$${total}`;
+        }
+        
+        this.updateSummary();
+        window.dispatchEvent(new CustomEvent("cart-updated"));
+      });
+    }
+
+    // Manual input change
+    if (qtyInput) {
+      qtyInput.addEventListener("change", (e) => {
+        const newQty = Math.max(1, parseInt(e.target.value, 10) || 1);
+        
+        CartManager.updateQuantity(item.name, newQty);
+        e.target.value = newQty;
+        
+        // Update price display
+        if (priceEl) {
+          const total = (item.priceNumeric * newQty).toFixed(2);
+          priceEl.textContent = `$${total}`;
+        }
+        
+        this.updateSummary();
+        window.dispatchEvent(new CustomEvent("cart-updated"));
+      });
+    }
+  },
+
+  bindRemoveButton(el, item) {
+    const removeBtn = el.querySelector('[fd-checkout-field="remove-item"]');
+    if (removeBtn) {
+      removeBtn.addEventListener("click", () => {
+        // Animate out
+        gsap.to(el, {
+          opacity: 0,
+          x: -20,
+          duration: 0.25,
+          onComplete: () => {
+            CartManager.removeItem(item.name);
+            this.render();
+            this.updateSummary();
+            window.dispatchEvent(new CustomEvent("cart-updated"));
+          },
+        });
+      });
+    }
   },
 
   observeFormSuccess() {
@@ -1579,7 +1666,7 @@ const CheckoutPage = {
   Quantity: ${item.quantity}
   Sets In Each: ${item.setsNum || ""}
   Brand: ${item.brand || ""}
-  Interface Type: ${item.cardType || ""}
+  Interface Type: ${item.interfaceType || ""}
   
   ------------------------------
   `;
