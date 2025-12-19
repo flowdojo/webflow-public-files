@@ -1615,10 +1615,14 @@ const CheckoutPage = {
   },
 
 observeFormSuccess() {
-  const successEl = document.querySelector(".w-form-done");
-  const form = document.querySelector(".checkout-section form");
+  const successEl = document.querySelector(".checkout-right-wrap .w-form-done");
+  const form = document.querySelector(".checkout-right-wrap");
   
-  if (!successEl && !form) return;
+  if (!successEl && !form) {
+    console.warn("Neither success element nor form found - cart clear won't work");
+    console.warn(successEl, form);
+    return;
+  }
 
   const clearCartNow = () => {
     console.log("Clearing cart after successful submission");
@@ -1634,14 +1638,15 @@ observeFormSuccess() {
         console.log("Success message visible - clearing cart");
         clearCartNow();
         observer.disconnect(); // Stop observing after clearing
-      }
+      } 
     });
 
     observer.observe(successEl, {
       attributes: true,
       attributeFilter: ["style"],
     });
-  }
+    console.log("MutationObserver attached to success element");
+  } else {console.warn("MutationObserver not attached to success element")}
 
   // Method 2: Intercept form submission
   if (form) {
@@ -1663,7 +1668,7 @@ observeFormSuccess() {
       // Stop checking after 5 seconds
       setTimeout(() => clearInterval(checkInterval), 5000);
     });
-  }
+  } else {console.warn("Form not submitted")}
 },
 
   updateSummary() {
